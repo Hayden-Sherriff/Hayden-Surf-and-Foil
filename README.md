@@ -51,3 +51,9 @@ npm run dev                  # http://localhost:3000
 A single shared password (`APP_PASSWORD`) posts to `/api/login`, which sets an HMAC-signed,
 httpOnly session cookie valid for 30 days. `src/middleware.ts` redirects unauthenticated requests
 to `/login`.
+
+Login and logout reject cross-site posts by comparing `Origin` to `Host`, and failed logins are
+throttled to 10 per 15 minutes per client IP. The throttle is in-process, so it limits each serverless
+instance rather than the deployment as a whole — adequate for a single-user app, but a shared store
+(e.g. Upstash) would be needed for a stricter guarantee. If `APP_PASSWORD` or `SESSION_SECRET` is
+missing, the app shows a config message on `/login` instead of returning 500s.

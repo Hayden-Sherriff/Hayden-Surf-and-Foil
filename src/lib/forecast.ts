@@ -151,7 +151,9 @@ export async function getWeekForecast(): Promise<WeekForecast> {
     });
   });
 
-  const dates = [...new Set(surfHours.map((h) => h.time.slice(0, 10)))].sort();
+  const dates = [
+    ...new Set([...surfHours, ...foilHours].map((h) => h.time.slice(0, 10))),
+  ].sort();
 
   const days = dates.map((date) => {
     const surfForDay = bestPerHour(surfHours.filter((h) => h.time.startsWith(date)));

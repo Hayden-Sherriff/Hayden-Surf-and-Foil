@@ -28,23 +28,48 @@ export async function isValidSessionToken(token: string | undefined): Promise<bo
   if (!token) return false;
   const [expiresAt, signature] = token.split(".");
   if (!expiresAt || !signature) return false;
-  if (Number(expiresAt) < Date.now()) return false;
-  return timingSafeEqual(signature, await sign(expiresAt));
+  const expiry = Number(expiresAt);
+  if (!Number.isFinite(expiry) || expiry < Date.now()) return false;
+  return constantTimeEqual(signature, await sign(expiresAt));
 }
 
-export function isValidPassword(password: string): boolean {
+export async function isValidPassword(password: string): Promise<boolean> {
   const expected = process.env.APP_PASSWORD;
   if (!expected) throw new Error("APP_PASSWORD is not set");
-  return timingSafeEqual(password, expected);
+  return constantTimeEqual(password, expected);
 }
 
 export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+/**
+ * The session cookie is sameSite "lax", which still allows top-level form posts
+ * from other sites, so the auth routes check the origin themselves.
+ */
+export function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Compares SHA-256 digests rather than the raw strings so the comparison is
+ * always over the same number of bytes and cannot leak the expected length.
+ */
+async function constantTimeEqual(a: string, b: string): Promise<boolean> {
+  const [digestA, digestB] = await Promise.all([digest(a), digest(b)]);
   let mismatch = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < digestA.length; i += 1) {
+    mismatch |= digestA[i] ^ digestB[i];
   }
   return mismatch === 0;
+}
+
+async function digest(value: string): Promise<Uint8Array> {
+  return new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
+  );
 }

@@ -76,7 +76,11 @@ function Verdict({
   kind: "surf" | "foil";
 }) {
   const activity = day ? day[kind] : null;
-  const window = activity?.windows[0];
+  const window = activity?.windows.reduce<(typeof activity.windows)[number] | undefined>(
+    (best, candidate) =>
+      !best || RATING_ORDER[candidate.rating] > RATING_ORDER[best.rating] ? candidate : best,
+    undefined,
+  );
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">

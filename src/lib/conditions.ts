@@ -261,8 +261,12 @@ export function buildWindows<T extends { time: string; rating: Rating; spotName:
   return windows;
 }
 
+/**
+ * Times are naive local strings (`2026-08-16T05:00`). Parsing them as UTC makes
+ * the wall-clock gap independent of the server timezone.
+ */
 function hourGap(a: string, b: string): number {
-  return Math.abs(new Date(b).getTime() - new Date(a).getTime()) / 3_600_000;
+  return Math.abs(Date.parse(`${b}Z`) - Date.parse(`${a}Z`)) / 3_600_000;
 }
 
 export function round1(value: number): number {

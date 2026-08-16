@@ -1,11 +1,18 @@
 export const metadata = { title: "Log in | Surf & Foil" };
 
+const ERRORS: Record<string, string> = {
+  "1": "Wrong password, try again.",
+  throttled: "Too many attempts. Wait 15 minutes and try again.",
+  config: "Server is missing APP_PASSWORD or SESSION_SECRET.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const message = ERRORS[error ?? ""];
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6">
@@ -30,9 +37,9 @@ export default async function LoginPage({
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-sky-500"
         />
 
-        {error ? (
+        {message ? (
           <p className="mt-3 text-sm text-rose-400" role="alert">
-            Wrong password, try again.
+            {message}
           </p>
         ) : null}
 
