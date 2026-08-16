@@ -140,7 +140,7 @@ export function rateSurfHour(
     rating = surfFt >= THRESHOLDS.goodSurfFt && clean ? "fair" : "poor";
   } else if (overpowering) {
     rating = bigEnough && (clean || halfClean) ? "fair" : "poor";
-    reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is too strong, faces will be chopped up`;
+    reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} ${clean || halfClean ? "is too strong, faces will be chopped up" : "onshore gale, blown out"}`;
   } else if (bigEnough && clean) {
     const lined = angleDelta(input.swellDir, spot.idealSwellDir) <= 35 && input.swellPeriodS >= 8;
     rating = surfFt >= THRESHOLDS.epicSurfFt && lined ? "epic" : "good";

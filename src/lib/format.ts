@@ -4,16 +4,18 @@
  * server's own timezone shifting them.
  */
 export function formatHour(time: string): string {
-  const hour = Number(time.slice(11, 13)) % 24;
-  const suffix = hour < 12 ? "am" : "pm";
-  const twelve = hour % 12 === 0 ? 12 : hour % 12;
-  return `${twelve}${suffix}`;
+  return hourLabel(Number(time.slice(11, 13)));
 }
 
+function hourLabel(hour: number): string {
+  const h = ((hour % 24) + 24) % 24;
+  const twelve = h % 12 === 0 ? 12 : h % 12;
+  return `${twelve}${h < 12 ? "am" : "pm"}`;
+}
+
+/** The window is inclusive of its last hour, so it reads as ending an hour later. */
 export function formatWindow(startTime: string, endTime: string): string {
-  const endHour = Number(endTime.slice(11, 13)) + 1;
-  const paddedEnd = `${endTime.slice(0, 11)}${String(endHour).padStart(2, "0")}:00`;
-  return `${formatHour(startTime)}-${formatHour(paddedEnd)}`;
+  return `${formatHour(startTime)}-${hourLabel(Number(endTime.slice(11, 13)) + 1)}`;
 }
 
 export function formatDate(date: string): string {
@@ -39,6 +41,3 @@ export function brisbaneNow(now = new Date()): string {
   return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
 }
 
-export function brisbaneToday(now = new Date()): string {
-  return brisbaneNow(now).slice(0, 10);
-}
