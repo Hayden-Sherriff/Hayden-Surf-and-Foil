@@ -25,15 +25,15 @@ export type SurfSpot = {
 };
 
 /**
- * The spots Hayden surfs, north to south: South Stradbroke down to Duranbah.
- * Offshore directions come from the local point/beach orientation: the
- * right-hand points face NE-E so SW-W is offshore, while the east-facing beach
- * breaks want a straight W-WNW.
+ * The spots Hayden surfs, north to south: South Stradbroke Island down to
+ * Dreamtime at Fingal Head. Offshore directions come from the local point/beach
+ * orientation: the right-hand points face NE-E so SW-W is offshore, while the
+ * east-facing beach breaks want a straight W-WNW.
  */
 export const SURF_SPOTS: SurfSpot[] = [
   {
     id: "south-straddie",
-    name: "South Stradbroke",
+    name: "South Stradbroke Island",
     shortName: "South Straddie",
     lat: -27.885,
     lon: 153.418,
@@ -44,20 +44,6 @@ export const SURF_SPOTS: SurfSpot[] = [
     refraction: 0.15,
     notes:
       "Boat-access beach breaks with no crowd. Fully exposed, so it picks up any E-SE swell and wants a W offshore.",
-  },
-  {
-    id: "dreamtime",
-    name: "Dreamtime",
-    shortName: "Dreamtime",
-    lat: -27.932,
-    lon: 153.432,
-    offshoreDir: 255,
-    swellWindow: [40, 180],
-    idealSwellDir: 110,
-    exposure: 0.95,
-    refraction: 0.3,
-    notes:
-      "Banks on the South Straddie side of the Seaway, fed by the sand pumping. Long walls on E-SE swell with SW-W offshore.",
   },
   {
     id: "burleigh",
@@ -142,6 +128,20 @@ export const SURF_SPOTS: SurfSpot[] = [
     refraction: 0.2,
     notes:
       "East-facing swell magnet next to the Tweed wall. Wants E swell and W-WSW offshore; has a wave when the points are flat.",
+  },
+  {
+    id: "dreamtime",
+    name: "Dreamtime (Fingal Head)",
+    shortName: "Dreamtime",
+    lat: -28.198,
+    lon: 153.573,
+    offshoreDir: 250,
+    swellWindow: [45, 175],
+    idealSwellDir: 125,
+    exposure: 0.85,
+    refraction: 0.4,
+    notes:
+      "Right-hander off the Fingal Head basalt, south of D-Bah. Wraps in on E-SE swell with SW-W offshore and stays cleaner than the beaches in a southerly.",
   },
 ];
 

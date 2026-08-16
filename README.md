@@ -20,8 +20,8 @@ swell window, ideal swell) lives in `src/lib/spots.ts`.
 
 ## Spots
 
-Surf: South Stradbroke, Dreamtime, Burleigh Heads, Palm Beach, Currumbin Alley, Kirra,
-Snapper Rocks (Superbank), Duranbah.
+Surf: South Stradbroke Island, Burleigh Heads, Palm Beach, Currumbin Alley, Kirra,
+Snapper Rocks (Superbank), Duranbah, Dreamtime (Fingal Head).
 
 Wing foil: Currumbin Creek (flat water, NE seabreeze) and Currumbin Alley (wave riding, SE-S).
 

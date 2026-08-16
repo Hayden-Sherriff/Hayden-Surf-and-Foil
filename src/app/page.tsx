@@ -28,7 +28,7 @@ export default async function HomePage() {
         <div>
           <h1 className="text-3xl font-semibold text-slate-100">Surf &amp; Foil</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Next 7 days, South Straddie to D-Bah. Surf counts when it is {THRESHOLDS.goodSurfFt}ft+
+            Next 7 days, South Straddie to Fingal. Surf counts when it is {THRESHOLDS.goodSurfFt}ft+
             with offshore wind; wing foiling when Currumbin is {THRESHOLDS.goodWindKts}kt+.
           </p>
         </div>
