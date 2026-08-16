@@ -14,12 +14,11 @@ const burleigh = SURF_SPOTS.find((spot) => spot.id === "burleigh")!;
 const dbah = SURF_SPOTS.find((spot) => spot.id === "duranbah")!;
 const creek = FOIL_SPOTS.find((spot) => spot.id === "currumbin-creek")!;
 
-const swell = { swellHeightM: 1.3, swellPeriodS: 10, swellDir: 135 };
+const swell = { swellHeightM: 1.4, swellPeriodS: 10, swellDir: 135 };
 
 function surf(overrides: Partial<Parameters<typeof rateSurfHour>[1]> = {}, spot = burleigh) {
   return rateSurfHour(spot, {
     time: "2026-08-16T07:00",
-    waveHeightM: 1.4,
     windKts: 8,
     windGustKts: 12,
     windDir: 225,
@@ -54,11 +53,11 @@ describe("surf rating", () => {
   });
 
   it("calls a lined-up 5ft+ offshore morning epic", () => {
-    expect(surf({ waveHeightM: 1.75 }).rating).toBe("epic");
+    expect(surf({ swellHeightM: 1.75 }).rating).toBe("epic");
   });
 
   it("leaves clean surf under 4ft short of good", () => {
-    const hour = surf({ waveHeightM: 1.2 });
+    const hour = surf({ swellHeightM: 1.2 });
     expect(hour.surfFt).toBeLessThan(4);
     expect(hour.rating).toBe("fair");
   });
@@ -79,7 +78,7 @@ describe("surf rating", () => {
   });
 
   it("drops small surf even when it is clean", () => {
-    expect(surf({ waveHeightM: 0.5 }).rating).toBe("poor");
+    expect(surf({ swellHeightM: 0.5 }).rating).toBe("poor");
   });
 
   it("downgrades swell outside the spot window", () => {

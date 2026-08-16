@@ -33,8 +33,9 @@ Surfline and Windy both sit behind bot protection / paid API keys for server-to-
 Windy Point Forecast API key is added later, it can be slotted in behind the same
 `getWeekForecast()` interface in `src/lib/forecast.ts`.
 
-Wave heights are significant wave height converted to feet, which tracks Gold Coast surf-report
-face heights closely enough for a 4ft call.
+Surf size comes from swell height only, so local wind chop is never counted as rideable wave. That
+reads smaller than a surf report on a windy day, which is the intent: a 4ft call means 4ft of swell
+energy at the bank.
 
 ## Running it
 

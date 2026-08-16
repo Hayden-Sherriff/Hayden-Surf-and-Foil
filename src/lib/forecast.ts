@@ -19,7 +19,6 @@ const FORECAST_DAYS = 7;
 type MarineResponse = {
   hourly: {
     time: string[];
-    wave_height: (number | null)[];
     wave_period: (number | null)[];
     swell_wave_height: (number | null)[];
     swell_wave_direction: (number | null)[];
@@ -56,7 +55,7 @@ function marineUrl(spots: { lat: number; lon: number }[]): string {
   const { latitude, longitude } = coords(spots);
   return (
     `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}` +
-    `&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period` +
+    `&hourly=wave_period,swell_wave_height,swell_wave_direction,swell_wave_period` +
     `&timezone=${encodeURIComponent(TIMEZONE)}&forecast_days=${FORECAST_DAYS}`
   );
 }
@@ -164,13 +163,13 @@ export async function getWeekForecast(): Promise<WeekForecast> {
       if (!isDaylight(time) || !isUpcoming(time, now)) return;
       const w = windIndex.get(time);
       if (w === undefined) return;
-      const waveHeightM = sea.wave_height[i];
+      const swellHeightM = sea.swell_wave_height[i];
       const windKts = wind.wind_speed_10m[w];
       const windDir = wind.wind_direction_10m[w];
       const swellDir = sea.swell_wave_direction[i];
       const periodS = sea.swell_wave_period[i] ?? sea.wave_period[i];
       if (
-        waveHeightM == null ||
+        swellHeightM == null ||
         windKts == null ||
         windDir == null ||
         swellDir == null ||
@@ -181,8 +180,7 @@ export async function getWeekForecast(): Promise<WeekForecast> {
       surfHours.push(
         rateSurfHour(spot, {
           time,
-          waveHeightM,
-          swellHeightM: sea.swell_wave_height[i] ?? waveHeightM,
+          swellHeightM,
           swellPeriodS: periodS,
           swellDir,
           windKts,

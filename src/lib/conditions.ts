@@ -89,21 +89,22 @@ export function windQualityFor(spot: SurfSpot, windDir: number, windKts: number)
 }
 
 /**
- * Open-Meteo reports open-ocean significant wave height, which is the same for
- * every spot along this short stretch of coast. Scaling it by the spot's
- * exposure and how far the swell is off its ideal angle (long-period swell
- * wraps in better) approximates the local surf height instead.
+ * Sized from swell height rather than significant wave height, so local wind
+ * chop never counts towards the surf. Open-Meteo reports it for the open ocean,
+ * the same for every spot along this short stretch of coast, so it is scaled by
+ * the spot's exposure and how far the swell is off its ideal angle (long-period
+ * swell wraps in better) to approximate the local surf height.
  */
 export function surfSizeFt(
   spot: SurfSpot,
-  waveHeightM: number,
+  swellHeightM: number,
   swellDir: number,
   swellPeriodS: number,
 ): number {
   const offAngle = Math.min(angleDelta(swellDir, spot.idealSwellDir), 90) / 90;
   const wrap = clamp((swellPeriodS - 8) / 8, 0, 1);
   const penalty = spot.refraction * offAngle * (1 - 0.4 * wrap);
-  return metresToFeet(waveHeightM) * spot.exposure * (1 - penalty);
+  return metresToFeet(swellHeightM) * spot.exposure * (1 - penalty);
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -114,7 +115,6 @@ export function rateSurfHour(
   spot: SurfSpot,
   input: {
     time: string;
-    waveHeightM: number;
     swellHeightM: number;
     swellPeriodS: number;
     swellDir: number;
@@ -123,7 +123,7 @@ export function rateSurfHour(
     windDir: number;
   },
 ): SurfHour {
-  const surfFt = round1(surfSizeFt(spot, input.waveHeightM, input.swellDir, input.swellPeriodS));
+  const surfFt = round1(surfSizeFt(spot, input.swellHeightM, input.swellDir, input.swellPeriodS));
   const swellFt = round1(metresToFeet(input.swellHeightM));
   const windQuality = windQualityFor(spot, input.windDir, input.windKts);
   const clean = windQuality === "offshore" || windQuality === "glassy";
