@@ -121,9 +121,6 @@ export function safeRedirectPath(value: string | null | undefined): string {
   if (!value) return "/";
   const path = value.replace(/[\t\r\n]/g, "");
   if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) return "/";
-  // Whole-segment match, so `/login`, `/login?x` and `/login/anything` all fall
-  // through rather than redirecting into the login screen or a 404.
-  if (path === "/login" || /^\/login[?/]/.test(path)) return "/";
 
   let resolved: URL;
   try {
@@ -132,7 +129,14 @@ export function safeRedirectPath(value: string | null | undefined): string {
     return "/";
   }
   if (resolved.origin !== REDIRECT_BASE) return "/";
+  // Checked after normalisation, so `/x/../login` is caught as well as `/login`
+  // itself; a whole-segment match leaves `/logins` alone.
+  if (isLoginPath(resolved.pathname)) return "/";
   return resolved.pathname + resolved.search;
+}
+
+function isLoginPath(pathname: string): boolean {
+  return pathname === "/login" || pathname.startsWith("/login/");
 }
 
 /**

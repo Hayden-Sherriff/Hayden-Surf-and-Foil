@@ -144,6 +144,11 @@ describe("post-login redirect target", () => {
     expect(safeRedirectPath("/login/anything")).toBe("/");
   });
 
+  it("catches a login path hidden behind a relative segment", () => {
+    expect(safeRedirectPath("/x/../login")).toBe("/");
+    expect(safeRedirectPath("/x/../login?error=1")).toBe("/");
+  });
+
   it("keeps a path that merely starts with the same letters", () => {
     expect(safeRedirectPath("/logins")).toBe("/logins");
   });
