@@ -33,7 +33,11 @@ export async function createSessionToken(): Promise<string> {
 
 export async function isValidSessionToken(token: string | undefined): Promise<boolean> {
   if (!token) return false;
-  const [expiresAt, signature] = token.split(".");
+  // Exactly two segments, so the format stays canonical and nothing unsigned can
+  // ride along after the signature.
+  const parts = token.split(".");
+  if (parts.length !== 2) return false;
+  const [expiresAt, signature] = parts;
   if (!expiresAt || !signature) return false;
   const expiry = Number(expiresAt);
   if (!Number.isFinite(expiry) || expiry < Date.now()) return false;
@@ -95,6 +99,18 @@ export function isSameOrigin(request: Request): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Where to send someone after login. Only a same-site absolute path is honoured:
+ * anything with a scheme, a `//` (protocol-relative) or backslash prefix, or a
+ * bounce back to `/login` falls through to the week view.
+ */
+export function safeRedirectPath(value: string | null | undefined): string {
+  if (!value || !value.startsWith("/")) return "/";
+  if (value.startsWith("//") || value.startsWith("/\\")) return "/";
+  if (value === "/login" || value.startsWith("/login?")) return "/";
+  return value;
 }
 
 /**

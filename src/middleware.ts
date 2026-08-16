@@ -9,7 +9,10 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (await isValidSessionToken(token)) return NextResponse.next();
 
+  // Carry the requested page so a deep link (or a bookmark to /spots) survives
+  // the login it triggered.
   const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(loginUrl);
 }
 

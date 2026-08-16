@@ -1,3 +1,5 @@
+import { safeRedirectPath } from "@/lib/auth";
+
 export const metadata = { title: "Log in | Surf & Foil" };
 
 const ERRORS: Record<string, string> = {
@@ -9,10 +11,11 @@ const ERRORS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const message = ERRORS[error ?? ""];
+  const destination = safeRedirectPath(next);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6">
@@ -23,6 +26,8 @@ export default async function LoginPage({
       >
         <h1 className="text-2xl font-semibold text-slate-100">Surf &amp; Foil</h1>
         <p className="mt-1 text-sm text-slate-400">Burleigh to D-Bah, plus Currumbin wind.</p>
+
+        <input type="hidden" name="next" value={destination} />
 
         <label htmlFor="password" className="mt-8 block text-sm font-medium text-slate-300">
           Password

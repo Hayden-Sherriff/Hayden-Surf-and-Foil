@@ -4,6 +4,7 @@ import {
   isSameOrigin,
   isValidPassword,
   isValidSessionToken,
+  safeRedirectPath,
   sessionCookieOptions,
 } from "./auth";
 
@@ -26,6 +27,10 @@ describe("session tokens", () => {
   it("rejects a tampered signature", async () => {
     const [expiresAt] = (await createSessionToken()).split(".");
     expect(await isValidSessionToken(`${expiresAt}.not-the-signature`)).toBe(false);
+  });
+
+  it("rejects a valid token with an extra trailing segment", async () => {
+    expect(await isValidSessionToken(`${await createSessionToken()}.extra`)).toBe(false);
   });
 
   it("rejects a non-numeric expiry", async () => {
@@ -106,5 +111,24 @@ describe("session cookie options", () => {
       sessionCookieOptions(post("http://localhost:3000/api/login", { "x-forwarded-proto": "https" }))
         .secure,
     ).toBe(true);
+  });
+});
+
+describe("post-login redirect target", () => {
+  it("keeps a same-site path with its query", () => {
+    expect(safeRedirectPath("/spots?spot=kirra")).toBe("/spots?spot=kirra");
+  });
+
+  it("falls back to the week view for off-site or missing targets", () => {
+    expect(safeRedirectPath(undefined)).toBe("/");
+    expect(safeRedirectPath("https://evil.example/steal")).toBe("/");
+    expect(safeRedirectPath("//evil.example/steal")).toBe("/");
+    expect(safeRedirectPath("/\\evil.example")).toBe("/");
+    expect(safeRedirectPath("spots")).toBe("/");
+  });
+
+  it("does not bounce back to the login screen", () => {
+    expect(safeRedirectPath("/login")).toBe("/");
+    expect(safeRedirectPath("/login?error=1")).toBe("/");
   });
 });

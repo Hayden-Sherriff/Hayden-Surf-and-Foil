@@ -213,13 +213,15 @@ export async function getWeekForecast(): Promise<WeekForecast> {
     });
   });
 
-  // Taken from the models' own time axis, not from the rated hours, so a day
-  // with nothing rideable still gets a card instead of vanishing from the week.
+  // Taken from the models' own time axis, not from the rated hours, so a day with
+  // nothing rideable still gets a card instead of vanishing from the week. Days
+  // with no daylight left are dropped, so an evening visit doesn't read today as
+  // flat when it is simply over.
   const dates = [
     ...new Set(
       [...marine, ...surfWind, ...foilWind]
         .flatMap((source) => source?.hourly.time ?? [])
-        .filter((time) => isUpcoming(time, now))
+        .filter((time) => isDaylight(time) && isUpcoming(time, now))
         .map((time) => time.slice(0, 10)),
     ),
   ].sort();

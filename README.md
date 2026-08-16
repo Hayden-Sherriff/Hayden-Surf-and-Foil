@@ -59,3 +59,10 @@ in-process, so it limits each serverless instance rather than the deployment as 
 a single-user app, but a shared store (e.g. Upstash) would be needed for a stricter guarantee. If
 `APP_PASSWORD` or `SESSION_SECRET` is missing, the app shows a config message on `/login` instead of
 returning 500s.
+
+The session cookie is `Secure` for every request except plain HTTP on loopback (`localhost`,
+`127.0.0.1`, `[::1]`), so `npm run start` works locally without HTTPS. Serving the app from a LAN
+hostname or IP over plain HTTP therefore loops back to `/login`, because the browser drops the
+`Secure` cookie — put it behind HTTPS (Vercel, or a local reverse proxy that sets
+`x-forwarded-proto: https`) rather than over unencrypted HTTP, which would expose the password and
+session token on the wire.
