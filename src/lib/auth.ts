@@ -1,0 +1,159 @@
+export const SESSION_COOKIE = "hsf_session";
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * The signing key mixes in the password, so rotating `APP_PASSWORD` invalidates
+ * every outstanding cookie — the only revocation path for a stateless session.
+ */
+function secret(): string {
+  const value = process.env.SESSION_SECRET;
+  if (!value) throw new Error("SESSION_SECRET is not set");
+  const password = process.env.APP_PASSWORD;
+  if (!password) throw new Error("APP_PASSWORD is not set");
+  return `${value}:${password}`;
+}
+
+async function sign(payload: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  return base64url(new Uint8Array(signature));
+}
+
+/** Avoids `Buffer` so the module stays Web-API only for the edge middleware. */
+function base64url(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export async function createSessionToken(): Promise<string> {
+  const expiresAt = String(Date.now() + SESSION_TTL_MS);
+  return `${expiresAt}.${await sign(expiresAt)}`;
+}
+
+export async function isValidSessionToken(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  // Exactly two segments, so the format stays canonical and nothing unsigned can
+  // ride along after the signature.
+  const parts = token.split(".");
+  if (parts.length !== 2) return false;
+  const [expiresAt, signature] = parts;
+  if (!expiresAt || !signature) return false;
+  const expiry = Number(expiresAt);
+  if (!Number.isFinite(expiry) || expiry < Date.now()) return false;
+  return constantTimeEqual(signature, await sign(expiresAt));
+}
+
+export async function isValidPassword(password: string): Promise<boolean> {
+  const expected = process.env.APP_PASSWORD;
+  if (!expected) throw new Error("APP_PASSWORD is not set");
+  return constantTimeEqual(password, expected);
+}
+
+export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
+
+/**
+ * Shared by login and logout: the delete has to repeat the same `path`, or the
+ * browser expires a different cookie scoped to `/api` and the session survives.
+ */
+const SESSION_COOKIE_OPTIONS = {
+  name: SESSION_COOKIE,
+  httpOnly: true,
+  sameSite: "lax",
+  path: "/",
+} as const;
+
+/**
+ * Secure everywhere except a plain-HTTP request to a loopback host, where the
+ * browser would drop the cookie and the login would loop; that covers a local
+ * `next start` without weakening preview or production, which always arrive as
+ * HTTPS (`x-forwarded-proto` on a proxied deployment).
+ */
+export function sessionCookieOptions(request: Request) {
+  return { ...SESSION_COOKIE_OPTIONS, secure: !isLoopbackHttp(request) };
+}
+
+function isLoopbackHttp(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0].trim();
+  if (forwardedProto && forwardedProto !== "http") return false;
+  let url: URL;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:") return false;
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
+
+/**
+ * The session cookie is sameSite "lax", which still allows top-level form posts
+ * from other sites, so the auth routes require a matching `Origin`. Browsers
+ * always send it on form posts, so a missing header is rejected too.
+ */
+export function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
+const REDIRECT_BASE = "https://redirect.invalid";
+
+/**
+ * Where to send someone after login. Only a same-site absolute path is honoured:
+ * anything with a scheme, a `//` (protocol-relative) or backslash prefix, or a
+ * bounce back to `/login` falls through to the week view. Tabs and newlines are
+ * stripped first, because the URL parser drops them before resolving, so
+ * `/<tab>/evil.example` would otherwise pass the prefix check and then resolve
+ * off-site; the resolved origin is re-checked as a backstop.
+ */
+export function safeRedirectPath(value: string | null | undefined): string {
+  if (!value) return "/";
+  const path = value.replace(/[\t\r\n]/g, "");
+  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) return "/";
+
+  let resolved: URL;
+  try {
+    resolved = new URL(path, REDIRECT_BASE);
+  } catch {
+    return "/";
+  }
+  if (resolved.origin !== REDIRECT_BASE) return "/";
+  // Checked after normalisation, so `/x/../login` is caught as well as `/login`
+  // itself; a whole-segment match leaves `/logins` alone.
+  if (isLoginPath(resolved.pathname)) return "/";
+  return resolved.pathname + resolved.search;
+}
+
+function isLoginPath(pathname: string): boolean {
+  return pathname === "/login" || pathname.startsWith("/login/");
+}
+
+/**
+ * Compares SHA-256 digests rather than the raw strings so the comparison is
+ * always over the same number of bytes and cannot leak the expected length.
+ */
+async function constantTimeEqual(a: string, b: string): Promise<boolean> {
+  const [digestA, digestB] = await Promise.all([digest(a), digest(b)]);
+  let mismatch = 0;
+  for (let i = 0; i < digestA.length; i += 1) {
+    mismatch |= digestA[i] ^ digestB[i];
+  }
+  return mismatch === 0;
+}
+
+async function digest(value: string): Promise<Uint8Array> {
+  return new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
+  );
+}
