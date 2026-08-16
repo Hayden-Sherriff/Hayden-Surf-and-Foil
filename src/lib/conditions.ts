@@ -111,6 +111,14 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/** Joins the things wrong with an hour into one sentence, worst first. */
+function listReasons(parts: (string | null)[]): string {
+  const kept = parts.filter((part): part is string => part !== null);
+  const sentence =
+    kept.length > 1 ? `${kept.slice(0, -1).join(", ")} and ${kept[kept.length - 1]}` : kept[0];
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
 export function rateSurfHour(
   spot: SurfSpot,
   input: {
@@ -136,15 +144,21 @@ export function rateSurfHour(
   let reason: string;
 
   if (!inSwellWindow) {
-    // Names the wind too when it is a gale, so the hour isn't explained away by
-    // the swell angle alone.
-    reason = overpowering
-      ? `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window, and ${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is too strong`
-      : `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window`;
+    // Every problem gets named, size first: a flat hour is too small before it
+    // is anything else, so a gale is not blamed for ruining waves that are not
+    // there.
     rating = bigEnough && clean && !overpowering ? "fair" : "poor";
+    reason = listReasons([
+      bigEnough ? null : `only ${surfFt}ft`,
+      `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window`,
+      overpowering ? `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is too strong` : null,
+    ]);
   } else if (overpowering) {
     rating = bigEnough && (clean || halfClean) ? "fair" : "poor";
-    reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} ${clean || halfClean ? "is too strong, faces will be chopped up" : `${windQuality} gale, blown out`}`;
+    const wind = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)}`;
+    reason = bigEnough
+      ? `${wind} ${clean || halfClean ? "is too strong, faces will be chopped up" : `${windQuality} gale, blown out`}`
+      : listReasons([`only ${surfFt}ft`, `${wind} is too strong`]);
   } else if (bigEnough && clean) {
     const lined = angleDelta(input.swellDir, spot.idealSwellDir) <= 35 && input.swellPeriodS >= 8;
     rating = surfFt >= THRESHOLDS.epicSurfFt && lined ? "epic" : "good";

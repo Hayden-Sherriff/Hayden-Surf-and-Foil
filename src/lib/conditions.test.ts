@@ -85,6 +85,12 @@ describe("surf rating", () => {
     expect(surf({ swellDir: 300 }).rating).not.toBe("good");
   });
 
+  it("blames the size, not the wind, on a flat and windy hour", () => {
+    const hour = surf({ swellHeightM: 0.3, windKts: 30 });
+    expect(hour.reason).toContain(`Only ${hour.surfFt}ft`);
+    expect(hour.rating).toBe("poor");
+  });
+
   it("names the gale as well as the swell angle when both are wrong", () => {
     const hour = surf({ swellDir: 300, windKts: 30, windDir: 225 });
     expect(hour.reason).toContain("outside");
