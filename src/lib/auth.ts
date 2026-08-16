@@ -43,11 +43,12 @@ export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
 
 /**
  * The session cookie is sameSite "lax", which still allows top-level form posts
- * from other sites, so the auth routes check the origin themselves.
+ * from other sites, so the auth routes require a matching `Origin`. Browsers
+ * always send it on form posts, so a missing header is rejected too.
  */
 export function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin) return false;
   try {
     return new URL(origin).host === request.headers.get("host");
   } catch {

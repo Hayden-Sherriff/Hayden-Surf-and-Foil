@@ -6,7 +6,7 @@ import {
   isSameOrigin,
   isValidPassword,
 } from "@/lib/auth";
-import { clearAttempts, isThrottled, recordFailure } from "@/lib/throttle";
+import { clearAttempts, clientKey, isThrottled, recordFailure } from "@/lib/throttle";
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/login?error=config", request.url), { status: 303 });
   }
 
-  const client = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "local";
+  const client = clientKey(request);
   if (isThrottled(client)) {
     return NextResponse.redirect(new URL("/login?error=throttled", request.url), { status: 303 });
   }

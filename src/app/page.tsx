@@ -54,7 +54,7 @@ export default async function HomePage() {
 
       <div className="mt-8 space-y-4">
         {week.days.map((day) => (
-          <DayCard key={day.date} day={day} />
+          <DayCard key={day.date} day={day} today={day.date === week.today} />
         ))}
       </div>
 

@@ -52,8 +52,10 @@ A single shared password (`APP_PASSWORD`) posts to `/api/login`, which sets an H
 httpOnly session cookie valid for 30 days. `src/middleware.ts` redirects unauthenticated requests
 to `/login`.
 
-Login and logout reject cross-site posts by comparing `Origin` to `Host`, and failed logins are
-throttled to 10 per 15 minutes per client IP. The throttle is in-process, so it limits each serverless
-instance rather than the deployment as a whole — adequate for a single-user app, but a shared store
-(e.g. Upstash) would be needed for a stricter guarantee. If `APP_PASSWORD` or `SESSION_SECRET` is
-missing, the app shows a config message on `/login` instead of returning 500s.
+Login and logout require an `Origin` header matching `Host`, and failed logins are throttled to 10
+per 15 minutes per client. The throttle key comes from Vercel's platform-set `x-vercel-forwarded-for`
+/ `x-real-ip` (client-supplied `x-forwarded-for` is only a last-resort fallback), and the store is
+in-process, so it limits each serverless instance rather than the deployment as a whole — adequate for
+a single-user app, but a shared store (e.g. Upstash) would be needed for a stricter guarantee. If
+`APP_PASSWORD` or `SESSION_SECRET` is missing, the app shows a config message on `/login` instead of
+returning 500s.

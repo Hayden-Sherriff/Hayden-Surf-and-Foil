@@ -1,4 +1,4 @@
-import { FOIL_SPOTS, SURF_SPOTS, type FoilSpot, type SurfSpot } from "./spots";
+import type { FoilSpot, SurfSpot } from "./spots";
 
 export const THRESHOLDS = {
   /** Hayden's bar for good surf, in feet of face height. */
@@ -272,6 +272,3 @@ function hourGap(a: string, b: string): number {
 export function round1(value: number): number {
   return Math.round(value * 10) / 10;
 }
-
-export const ALL_SURF_SPOTS = SURF_SPOTS;
-export const ALL_FOIL_SPOTS = FOIL_SPOTS;

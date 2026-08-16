@@ -11,6 +11,7 @@ import {
   type Window,
 } from "./conditions";
 import { FOIL_SPOTS, SURF_SPOTS } from "./spots";
+import { brisbaneNow } from "./format";
 
 export const TIMEZONE = "Australia/Brisbane";
 const FORECAST_DAYS = 7;
@@ -51,13 +52,36 @@ function coords(spots: { lat: number; lon: number }[]) {
   };
 }
 
-async function fetchMarine(spots: { lat: number; lon: number }[]) {
+function marineUrl(spots: { lat: number; lon: number }[]): string {
   const { latitude, longitude } = coords(spots);
-  const url =
+  return (
     `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}` +
     `&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period` +
-    `&timezone=${encodeURIComponent(TIMEZONE)}&forecast_days=${FORECAST_DAYS}`;
-  return fetchJson<MarineResponse>(url);
+    `&timezone=${encodeURIComponent(TIMEZONE)}&forecast_days=${FORECAST_DAYS}`
+  );
+}
+
+/**
+ * The marine model rejects coordinates it considers land, and one bad point
+ * fails the whole batch, so a failed batch falls back to per-spot requests and
+ * keeps whatever resolves.
+ */
+async function fetchMarine(
+  spots: { lat: number; lon: number }[],
+): Promise<(MarineResponse | null)[]> {
+  try {
+    return await fetchJson<MarineResponse>(marineUrl(spots));
+  } catch {
+    return Promise.all(
+      spots.map(async (spot) => {
+        try {
+          return (await fetchJson<MarineResponse>(marineUrl([spot])))[0] ?? null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+  }
 }
 
 async function fetchWind(spots: { lat: number; lon: number }[]) {
@@ -78,6 +102,11 @@ function isDaylight(time: string): boolean {
   return hour >= THRESHOLDS.dayStartHour && hour <= THRESHOLDS.dayEndHour;
 }
 
+/** Hours that have already passed in Brisbane are no use for "be ready". */
+function isUpcoming(time: string, now: string): boolean {
+  return time.slice(0, 13) >= now.slice(0, 13);
+}
+
 export type DayForecast = {
   date: string;
   weekday: string;
@@ -95,10 +124,13 @@ export type DayForecast = {
 
 export type WeekForecast = {
   generatedAt: string;
+  /** Brisbane date at render time, so client components don't recompute it. */
+  today: string;
   days: DayForecast[];
 };
 
 export async function getWeekForecast(): Promise<WeekForecast> {
+  const now = brisbaneNow();
   const [marine, surfWind, foilWind] = await Promise.all([
     fetchMarine(SURF_SPOTS),
     fetchWind(SURF_SPOTS),
@@ -111,7 +143,7 @@ export async function getWeekForecast(): Promise<WeekForecast> {
     const wind = surfWind[index]?.hourly;
     if (!sea || !wind) return;
     sea.time.forEach((time, i) => {
-      if (!isDaylight(time)) return;
+      if (!isDaylight(time) || !isUpcoming(time, now)) return;
       const waveHeightM = sea.wave_height[i];
       const windKts = wind.wind_speed_10m[i];
       const windDir = wind.wind_direction_10m[i];
@@ -136,7 +168,7 @@ export async function getWeekForecast(): Promise<WeekForecast> {
     const wind = foilWind[index]?.hourly;
     if (!wind) return;
     wind.time.forEach((time, i) => {
-      if (!isDaylight(time)) return;
+      if (!isDaylight(time) || !isUpcoming(time, now)) return;
       const windKts = wind.wind_speed_10m[i];
       const windDir = wind.wind_direction_10m[i];
       if (windKts == null || windDir == null) return;
@@ -178,7 +210,7 @@ export async function getWeekForecast(): Promise<WeekForecast> {
     };
   });
 
-  return { generatedAt: new Date().toISOString(), days };
+  return { generatedAt: new Date().toISOString(), today: now.slice(0, 10), days };
 }
 
 /** Keeps the best-rated spot for each hour so the week view is one row per hour. */

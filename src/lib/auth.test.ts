@@ -65,7 +65,7 @@ describe("origin check", () => {
     ).toBe(false);
   });
 
-  it("allows requests without an origin header", () => {
-    expect(isSameOrigin(withHeaders({ host: "surf.example.com" }))).toBe(true);
+  it("rejects requests without an origin header", () => {
+    expect(isSameOrigin(withHeaders({ host: "surf.example.com" }))).toBe(false);
   });
 });

@@ -23,12 +23,22 @@ export function formatDate(date: string): string {
   });
 }
 
-export function isToday(date: string, now = new Date()): boolean {
-  const brisbane = new Intl.DateTimeFormat("en-CA", {
+/** Current Brisbane wall clock as a naive `YYYY-MM-DDTHH:mm` string. */
+export function brisbaneNow(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Australia/Brisbane",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(now);
-  return brisbane === date;
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
+
+export function brisbaneToday(now = new Date()): string {
+  return brisbaneNow(now).slice(0, 10);
 }

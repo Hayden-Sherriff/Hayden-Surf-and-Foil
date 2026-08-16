@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { RatingBadge } from "./RatingBadge";
-import { compassPoint, RATING_ORDER, type Rating } from "@/lib/conditions";
+import { compassPoint, RATING_ORDER, THRESHOLDS, type Rating } from "@/lib/conditions";
 import type { DayForecast } from "@/lib/forecast";
-import { formatDate, formatHour, formatWindow, isToday } from "@/lib/format";
+import { formatDate, formatHour, formatWindow } from "@/lib/format";
 
-export function DayCard({ day }: { day: DayForecast }) {
+export function DayCard({ day, today = false }: { day: DayForecast; today?: boolean }) {
   const [open, setOpen] = useState(false);
-  const today = isToday(day.date);
 
   return (
     <section
@@ -36,13 +35,13 @@ export function DayCard({ day }: { day: DayForecast }) {
           label="Surf"
           rating={day.surf.best}
           windows={day.surf.windows}
-          emptyText="No offshore 3ft+ window"
+          emptyText={`No offshore ${THRESHOLDS.goodSurfFt}ft+ window`}
         />
         <ActivitySummary
           label="Wing foil"
           rating={day.foil.best}
           windows={day.foil.windows}
-          emptyText="Under 16kt at Currumbin"
+          emptyText={`Under ${THRESHOLDS.goodWindKts}kt at Currumbin`}
         />
       </div>
 
