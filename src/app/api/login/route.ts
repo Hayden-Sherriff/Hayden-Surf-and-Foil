@@ -18,21 +18,25 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/login?error=config", request.url), { status: 303 });
   }
 
-  const client = clientKey(request);
-  if (isThrottled(client)) {
-    return NextResponse.redirect(new URL("/login?error=throttled", request.url), { status: 303 });
-  }
-
+  // The form is read before the throttle check so a throttled attempt can send the
+  // requested page back to the login screen instead of losing the deep link.
   const form = await request.formData();
   const password = String(form.get("password") ?? "");
   const destination = safeRedirectPath(form.get("next")?.toString());
 
-  if (!(await isValidPassword(password))) {
-    recordFailure(client);
+  const backToLogin = (error: string) => {
     const retry = new URL("/login", request.url);
-    retry.searchParams.set("error", "1");
+    retry.searchParams.set("error", error);
     if (destination !== "/") retry.searchParams.set("next", destination);
     return NextResponse.redirect(retry, { status: 303 });
+  };
+
+  const client = clientKey(request);
+  if (isThrottled(client)) return backToLogin("throttled");
+
+  if (!(await isValidPassword(password))) {
+    recordFailure(client);
+    return backToLogin("1");
   }
   clearAttempts(client);
 

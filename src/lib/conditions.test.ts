@@ -80,6 +80,12 @@ describe("surf rating", () => {
     expect(surf({ swellDir: 300 }).rating).not.toBe("good");
   });
 
+  it("names the gale as well as the swell angle when both are wrong", () => {
+    const hour = surf({ swellDir: 300, windKts: 30, windDir: 225 });
+    expect(hour.reason).toContain("outside");
+    expect(hour.reason).toContain("30kt");
+  });
+
   it("runs the points smaller than the beach breaks on the same swell", () => {
     expect(surfSizeFt(dbah, 1.4, 135, 10)).toBeGreaterThan(surfSizeFt(burleigh, 1.4, 135, 10));
   });

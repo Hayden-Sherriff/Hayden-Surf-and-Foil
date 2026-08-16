@@ -136,8 +136,12 @@ export function rateSurfHour(
   let reason: string;
 
   if (!inSwellWindow) {
-    reason = `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window`;
-    rating = surfFt >= THRESHOLDS.goodSurfFt && clean ? "fair" : "poor";
+    // Names the wind too when it is a gale, so the hour isn't explained away by
+    // the swell angle alone.
+    reason = overpowering
+      ? `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window, and ${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is too strong`
+      : `${compassPoint(input.swellDir)} swell is outside the ${spot.shortName} window`;
+    rating = bigEnough && clean ? "fair" : "poor";
   } else if (overpowering) {
     rating = bigEnough && (clean || halfClean) ? "fair" : "poor";
     reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} ${clean || halfClean ? "is too strong, faces will be chopped up" : `${windQuality} gale, blown out`}`;
