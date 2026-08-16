@@ -8,16 +8,24 @@ const ERRORS: Record<string, string> = {
   config: "Server is missing APP_PASSWORD or SESSION_SECRET.",
 };
 
+type QueryValue = string | string[] | undefined;
+
+/** A repeated query parameter arrives as an array, so take the first value. */
+function first(value: QueryValue): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: QueryValue; next?: QueryValue }>;
 }) {
-  const { error, next } = await searchParams;
+  const params = await searchParams;
+  const error = first(params.error);
   // Own-property check so `?error=__proto__` can't resolve to an inherited value
   // that React refuses to render.
   const message = error && Object.hasOwn(ERRORS, error) ? ERRORS[error] : undefined;
-  const destination = safeRedirectPath(next);
+  const destination = safeRedirectPath(first(params.next));
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6">
