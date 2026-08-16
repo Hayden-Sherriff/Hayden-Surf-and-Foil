@@ -13,6 +13,10 @@ export async function middleware(request: NextRequest) {
   return NextResponse.redirect(loginUrl);
 }
 
+/**
+ * Everything is gated except the login screen, the two auth routes and static
+ * assets, so a page added later is protected without touching this list.
+ */
 export const config = {
-  matcher: ["/", "/spots"],
+  matcher: ["/((?!login|api/login|api/logout|_next/|favicon.ico).*)"],
 };

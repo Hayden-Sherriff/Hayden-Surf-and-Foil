@@ -56,7 +56,8 @@ export const SESSION_COOKIE_OPTIONS = {
   name: SESSION_COOKIE,
   httpOnly: true,
   sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  /** Only a local `next dev` run is served over plain HTTP. */
+  secure: process.env.NODE_ENV !== "development",
   path: "/",
 } as const;
 

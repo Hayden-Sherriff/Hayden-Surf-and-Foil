@@ -35,12 +35,14 @@ export function DayCard({ day, today = false }: { day: DayForecast; today?: bool
           label="Surf"
           rating={day.surf.best}
           windows={day.surf.windows}
+          bestReason={bestReason(day.surf.hours)}
           emptyText={`No offshore ${THRESHOLDS.goodSurfFt}ft+ window`}
         />
         <ActivitySummary
           label="Wing foil"
           rating={day.foil.best}
           windows={day.foil.windows}
+          bestReason={bestReason(day.foil.hours)}
           emptyText={`Under ${THRESHOLDS.goodWindKts}kt at Currumbin`}
         />
       </div>
@@ -75,15 +77,26 @@ export function DayCard({ day, today = false }: { day: DayForecast; today?: bool
   );
 }
 
+/**
+ * The best hour's own reason explains a non-go day better than fixed copy, which
+ * would read "under 16kt" on a day that is actually too windy.
+ */
+function bestReason(hours: { rating: Rating; reason: string }[]): string | null {
+  if (hours.length === 0) return null;
+  return hours.reduce((a, b) => (RATING_ORDER[b.rating] > RATING_ORDER[a.rating] ? b : a)).reason;
+}
+
 function ActivitySummary({
   label,
   rating,
   windows,
+  bestReason,
   emptyText,
 }: {
   label: string;
   rating: Rating;
   windows: DayForecast["surf"]["windows"];
+  bestReason: string | null;
   emptyText: string;
 }) {
   const go = RATING_ORDER[rating] >= RATING_ORDER.good;
@@ -107,7 +120,7 @@ function ActivitySummary({
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">{emptyText}</p>
+        <p className="mt-3 text-sm text-slate-500">{bestReason ?? emptyText}</p>
       )}
     </div>
   );
