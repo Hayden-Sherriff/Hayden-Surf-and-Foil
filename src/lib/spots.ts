@@ -25,11 +25,40 @@ export type SurfSpot = {
 };
 
 /**
- * Burleigh Heads down to Duranbah. Offshore directions come from the local
- * point/beach orientation: the right-hand points face NE-E so SW-W is offshore,
- * while the east-facing beach breaks want a straight W-WNW.
+ * The spots Hayden surfs, north to south: South Stradbroke down to Duranbah.
+ * Offshore directions come from the local point/beach orientation: the
+ * right-hand points face NE-E so SW-W is offshore, while the east-facing beach
+ * breaks want a straight W-WNW.
  */
 export const SURF_SPOTS: SurfSpot[] = [
+  {
+    id: "south-straddie",
+    name: "South Stradbroke",
+    shortName: "South Straddie",
+    lat: -27.885,
+    lon: 153.418,
+    offshoreDir: 270,
+    swellWindow: [30, 190],
+    idealSwellDir: 100,
+    exposure: 1.05,
+    refraction: 0.15,
+    notes:
+      "Boat-access beach breaks with no crowd. Fully exposed, so it picks up any E-SE swell and wants a W offshore.",
+  },
+  {
+    id: "dreamtime",
+    name: "Dreamtime",
+    shortName: "Dreamtime",
+    lat: -27.932,
+    lon: 153.432,
+    offshoreDir: 255,
+    swellWindow: [40, 180],
+    idealSwellDir: 110,
+    exposure: 0.95,
+    refraction: 0.3,
+    notes:
+      "Banks on the South Straddie side of the Seaway, fed by the sand pumping. Long walls on E-SE swell with SW-W offshore.",
+  },
   {
     id: "burleigh",
     name: "Burleigh Heads",
@@ -73,20 +102,6 @@ export const SURF_SPOTS: SurfSpot[] = [
       "Long sand-bottom right off the creek mouth. Handles SW-S offshore and works on bigger SE swell when the beaches close out.",
   },
   {
-    id: "tugun-bilinga",
-    name: "Tugun / Bilinga",
-    shortName: "Tugun",
-    lat: -28.152,
-    lon: 153.502,
-    offshoreDir: 270,
-    swellWindow: [45, 190],
-    idealSwellDir: 100,
-    exposure: 1,
-    refraction: 0.15,
-    notes:
-      "Open beach breaks. Consistent on E swell with W offshore, closes out over about 6ft.",
-  },
-  {
     id: "kirra",
     name: "Kirra",
     shortName: "Kirra",
@@ -99,20 +114,6 @@ export const SURF_SPOTS: SurfSpot[] = [
     refraction: 0.55,
     notes:
       "Barrelling right point at the north end of the Superbank. Needs a solid ESE-SE swell (4ft+) and SW-W offshore to link up.",
-  },
-  {
-    id: "greenmount",
-    name: "Greenmount / Rainbow Bay",
-    shortName: "Greenmount",
-    lat: -28.167,
-    lon: 153.538,
-    offshoreDir: 225,
-    swellWindow: [70, 165],
-    idealSwellDir: 140,
-    exposure: 0.6,
-    refraction: 0.5,
-    notes:
-      "Sheltered inside points. Cleanest option when it is windy elsewhere; smaller than Snapper on the same swell.",
   },
   {
     id: "snapper",

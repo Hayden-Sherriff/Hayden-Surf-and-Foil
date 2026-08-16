@@ -35,7 +35,7 @@ export default async function LoginPage({
         className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-xl"
       >
         <h1 className="text-2xl font-semibold text-slate-100">Surf &amp; Foil</h1>
-        <p className="mt-1 text-sm text-slate-400">Burleigh to D-Bah, plus Currumbin wind.</p>
+        <p className="mt-1 text-sm text-slate-400">South Straddie to D-Bah, plus Currumbin wind.</p>
 
         <input type="hidden" name="next" value={destination} />
 

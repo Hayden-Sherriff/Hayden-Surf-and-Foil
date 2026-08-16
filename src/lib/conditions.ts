@@ -2,8 +2,8 @@ import type { FoilSpot, SurfSpot } from "./spots";
 
 export const THRESHOLDS = {
   /** Hayden's bar for good surf, in feet of face height. */
-  goodSurfFt: 3,
-  epicSurfFt: 4,
+  goodSurfFt: 4,
+  epicSurfFt: 5,
   /** Anything under this is glassy enough that direction stops mattering. */
   lightWindKts: 6,
   /** Offshore that is strong enough to wreck the wave face. */

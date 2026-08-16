@@ -19,7 +19,7 @@ const swell = { swellHeightM: 1.3, swellPeriodS: 10, swellDir: 135 };
 function surf(overrides: Partial<Parameters<typeof rateSurfHour>[1]> = {}, spot = burleigh) {
   return rateSurfHour(spot, {
     time: "2026-08-16T07:00",
-    waveHeightM: 1.05,
+    waveHeightM: 1.4,
     windKts: 8,
     windGustKts: 12,
     windDir: 225,
@@ -47,14 +47,20 @@ describe("compass helpers", () => {
 });
 
 describe("surf rating", () => {
-  it("calls 3ft+ with offshore wind good", () => {
+  it("calls 4ft+ with offshore wind good", () => {
     const hour = surf();
     expect(hour.rating).toBe("good");
     expect(hour.windQuality).toBe("offshore");
   });
 
-  it("calls a lined-up 4ft+ offshore morning epic", () => {
-    expect(surf({ waveHeightM: 1.5 }).rating).toBe("epic");
+  it("calls a lined-up 5ft+ offshore morning epic", () => {
+    expect(surf({ waveHeightM: 1.75 }).rating).toBe("epic");
+  });
+
+  it("leaves clean surf under 4ft short of good", () => {
+    const hour = surf({ waveHeightM: 1.2 });
+    expect(hour.surfFt).toBeLessThan(4);
+    expect(hour.rating).toBe("fair");
   });
 
   it("rejects onshore wind no matter the size", () => {

@@ -9,7 +9,7 @@ Open it, and the top of the page answers one question: is there anything great t
 
 | Activity | Rule |
 | --- | --- |
-| Surf | 3ft+ face with offshore or glassy wind, swell inside the spot's window. "Epic" needs 4ft+, 8s+ period and a swell direction lined up with the bank. |
+| Surf | 4ft+ face with offshore or glassy wind, swell inside the spot's window. "Epic" needs 5ft+, 8s+ period and a swell direction lined up with the bank. |
 | Wing foil | 16kt+ at Currumbin Creek / Currumbin Alley in a sailable direction. "Epic" needs 20kt+ from the NE (creek, flat water) or SE-S (the Alley). |
 
 Only daylight hours (5am-6pm Brisbane) are considered, and each hour of the week is scored for
@@ -20,7 +20,7 @@ swell window, ideal swell) lives in `src/lib/spots.ts`.
 
 ## Spots
 
-Surf: Burleigh Heads, Palm Beach, Currumbin Alley, Tugun/Bilinga, Kirra, Greenmount/Rainbow Bay,
+Surf: South Stradbroke, Dreamtime, Burleigh Heads, Palm Beach, Currumbin Alley, Kirra,
 Snapper Rocks (Superbank), Duranbah.
 
 Wing foil: Currumbin Creek (flat water, NE seabreeze) and Currumbin Alley (wave riding, SE-S).
@@ -34,7 +34,7 @@ Windy Point Forecast API key is added later, it can be slotted in behind the sam
 `getWeekForecast()` interface in `src/lib/forecast.ts`.
 
 Wave heights are significant wave height converted to feet, which tracks Gold Coast surf-report
-face heights closely enough for a 3-4ft call.
+face heights closely enough for a 4ft call.
 
 ## Running it
 
