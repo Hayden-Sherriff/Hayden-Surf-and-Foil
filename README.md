@@ -60,6 +60,9 @@ a single-user app, but a shared store (e.g. Upstash) would be needed for a stric
 `APP_PASSWORD` or `SESSION_SECRET` is missing, the app shows a config message on `/login` instead of
 returning 500s.
 
+The signing key is `SESSION_SECRET` plus `APP_PASSWORD`, so changing the password logs every
+existing session out — that is the revocation path if the password ever leaks.
+
 The session cookie is `Secure` for every request except plain HTTP on loopback (`localhost`,
 `127.0.0.1`, `[::1]`), so `npm run start` works locally without HTTPS. Serving the app from a LAN
 hostname or IP over plain HTTP therefore loops back to `/login`, because the browser drops the

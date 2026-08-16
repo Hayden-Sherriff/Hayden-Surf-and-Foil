@@ -46,6 +46,12 @@ describe("session tokens", () => {
     process.env.SESSION_SECRET = "different-secret";
     expect(await isValidSessionToken(token)).toBe(false);
   });
+
+  it("rejects sessions issued before a password rotation", async () => {
+    const token = await createSessionToken();
+    process.env.APP_PASSWORD = "rotated-password";
+    expect(await isValidSessionToken(token)).toBe(false);
+  });
 });
 
 describe("password check", () => {
@@ -135,5 +141,10 @@ describe("post-login redirect target", () => {
   it("does not bounce back to the login screen", () => {
     expect(safeRedirectPath("/login")).toBe("/");
     expect(safeRedirectPath("/login?error=1")).toBe("/");
+    expect(safeRedirectPath("/login/anything")).toBe("/");
+  });
+
+  it("keeps a path that merely starts with the same letters", () => {
+    expect(safeRedirectPath("/logins")).toBe("/logins");
   });
 });

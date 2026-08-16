@@ -1,10 +1,16 @@
 export const SESSION_COOKIE = "hsf_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * The signing key mixes in the password, so rotating `APP_PASSWORD` invalidates
+ * every outstanding cookie — the only revocation path for a stateless session.
+ */
 function secret(): string {
   const value = process.env.SESSION_SECRET;
   if (!value) throw new Error("SESSION_SECRET is not set");
-  return value;
+  const password = process.env.APP_PASSWORD;
+  if (!password) throw new Error("APP_PASSWORD is not set");
+  return `${value}:${password}`;
 }
 
 async function sign(payload: string): Promise<string> {
@@ -115,7 +121,9 @@ export function safeRedirectPath(value: string | null | undefined): string {
   if (!value) return "/";
   const path = value.replace(/[\t\r\n]/g, "");
   if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) return "/";
-  if (path === "/login" || path.startsWith("/login?")) return "/";
+  // Whole-segment match, so `/login`, `/login?x` and `/login/anything` all fall
+  // through rather than redirecting into the login screen or a 404.
+  if (path === "/login" || /^\/login[?/]/.test(path)) return "/";
 
   let resolved: URL;
   try {

@@ -84,6 +84,8 @@ describe("surf rating", () => {
     const hour = surf({ swellDir: 300, windKts: 30, windDir: 225 });
     expect(hour.reason).toContain("outside");
     expect(hour.reason).toContain("30kt");
+    // Two problems at once is worse than either alone, which would rate fair.
+    expect(hour.rating).toBe("poor");
   });
 
   it("runs the points smaller than the beach breaks on the same swell", () => {
