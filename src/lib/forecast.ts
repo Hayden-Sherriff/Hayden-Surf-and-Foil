@@ -83,7 +83,11 @@ async function fetchPerSpot<T, S extends { lat: number; lon: number }>(
 ): Promise<(T | null)[]> {
   let batchError: unknown;
   try {
-    return await fetchJson<T>(url(spots));
+    const batch = await fetchJson<T>(url(spots));
+    // The batch is joined back to spots by position, so a short response would
+    // silently misattribute one spot's forecast to another.
+    if (batch.length === spots.length) return batch;
+    throw new Error(`Forecast returned ${batch.length} of ${spots.length} spots`);
   } catch (error) {
     batchError = error;
   }

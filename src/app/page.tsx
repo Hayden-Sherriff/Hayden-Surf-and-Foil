@@ -5,11 +5,16 @@ import { getWeekForecast, type DayForecast } from "@/lib/forecast";
 import { formatWindow } from "@/lib/format";
 
 export const metadata = { title: "Surf & Foil this week" };
-export const revalidate = 1800;
+/**
+ * Rendered per request so a forecast outage during a deploy can't fail the build
+ * or freeze into the prerendered payload; the 30 min cache lives on the fetches
+ * themselves, so this costs a render, not an upstream call.
+ */
+export const dynamic = "force-dynamic";
 
 /**
- * A forecast failure is deliberately left to throw into `error.tsx`: catching it
- * here would make the failure page the cached ISR payload for the next 30 min.
+ * A forecast failure is deliberately left to throw into `error.tsx` rather than
+ * rendering a page that looks like a quiet week.
  */
 export default async function HomePage() {
   const week = await getWeekForecast();
