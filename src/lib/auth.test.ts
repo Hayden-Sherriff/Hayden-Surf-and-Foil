@@ -124,6 +124,11 @@ describe("post-login redirect target", () => {
     expect(safeRedirectPath("https://evil.example/steal")).toBe("/");
     expect(safeRedirectPath("//evil.example/steal")).toBe("/");
     expect(safeRedirectPath("/\\evil.example")).toBe("/");
+    // The URL parser strips tab/CR/LF, so these resolve off-site if passed through.
+    expect(safeRedirectPath("/\t/evil.example")).toBe("/");
+    expect(safeRedirectPath("/\n/evil.example")).toBe("/");
+    expect(safeRedirectPath("/\r/evil.example")).toBe("/");
+    expect(safeRedirectPath("/\t\\evil.example")).toBe("/");
     expect(safeRedirectPath("spots")).toBe("/");
   });
 

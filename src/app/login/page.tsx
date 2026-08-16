@@ -14,7 +14,9 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const { error, next } = await searchParams;
-  const message = ERRORS[error ?? ""];
+  // Own-property check so `?error=__proto__` can't resolve to an inherited value
+  // that React refuses to render.
+  const message = error && Object.hasOwn(ERRORS, error) ? ERRORS[error] : undefined;
   const destination = safeRedirectPath(next);
 
   return (

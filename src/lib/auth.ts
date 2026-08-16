@@ -101,16 +101,30 @@ export function isSameOrigin(request: Request): boolean {
   }
 }
 
+const REDIRECT_BASE = "https://redirect.invalid";
+
 /**
  * Where to send someone after login. Only a same-site absolute path is honoured:
  * anything with a scheme, a `//` (protocol-relative) or backslash prefix, or a
- * bounce back to `/login` falls through to the week view.
+ * bounce back to `/login` falls through to the week view. Tabs and newlines are
+ * stripped first, because the URL parser drops them before resolving, so
+ * `/<tab>/evil.example` would otherwise pass the prefix check and then resolve
+ * off-site; the resolved origin is re-checked as a backstop.
  */
 export function safeRedirectPath(value: string | null | undefined): string {
-  if (!value || !value.startsWith("/")) return "/";
-  if (value.startsWith("//") || value.startsWith("/\\")) return "/";
-  if (value === "/login" || value.startsWith("/login?")) return "/";
-  return value;
+  if (!value) return "/";
+  const path = value.replace(/[\t\r\n]/g, "");
+  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) return "/";
+  if (path === "/login" || path.startsWith("/login?")) return "/";
+
+  let resolved: URL;
+  try {
+    resolved = new URL(path, REDIRECT_BASE);
+  } catch {
+    return "/";
+  }
+  if (resolved.origin !== REDIRECT_BASE) return "/";
+  return resolved.pathname + resolved.search;
 }
 
 /**
