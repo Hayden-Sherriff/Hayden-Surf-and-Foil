@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
   SESSION_MAX_AGE_SECONDS,
   createSessionToken,
   isSameOrigin,
@@ -33,12 +33,8 @@ export async function POST(request: Request) {
 
   const response = NextResponse.redirect(new URL("/", request.url), { status: 303 });
   response.cookies.set({
-    name: SESSION_COOKIE,
+    ...SESSION_COOKIE_OPTIONS,
     value: await createSessionToken(),
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
   return response;

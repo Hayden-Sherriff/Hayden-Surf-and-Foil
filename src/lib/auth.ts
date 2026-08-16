@@ -16,7 +16,14 @@ async function sign(payload: string): Promise<string> {
     ["sign"],
   );
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  return Buffer.from(signature).toString("base64url");
+  return base64url(new Uint8Array(signature));
+}
+
+/** Avoids `Buffer` so the module stays Web-API only for the edge middleware. */
+function base64url(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 export async function createSessionToken(): Promise<string> {
@@ -40,6 +47,18 @@ export async function isValidPassword(password: string): Promise<boolean> {
 }
 
 export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
+
+/**
+ * Shared by login and logout: the delete has to repeat the same `path`, or the
+ * browser expires a different cookie scoped to `/api` and the session survives.
+ */
+export const SESSION_COOKIE_OPTIONS = {
+  name: SESSION_COOKIE,
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+} as const;
 
 /**
  * The session cookie is sameSite "lax", which still allows top-level form posts

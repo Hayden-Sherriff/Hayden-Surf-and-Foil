@@ -61,6 +61,11 @@ describe("surf rating", () => {
     expect(surf({ windDir: 45, windKts: 15 }).rating).toBe("poor");
   });
 
+  it("rates a storm-force onshore hour no better than a light onshore one", () => {
+    expect(surf({ windDir: 45, windKts: 30 }).rating).toBe("poor");
+    expect(surf({ windKts: 30 }).rating).toBe("fair");
+  });
+
   it("treats sub-6kt wind as glassy regardless of direction", () => {
     const hour = surf({ windDir: 45, windKts: 3 });
     expect(hour.windQuality).toBe("glassy");

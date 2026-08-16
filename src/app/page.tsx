@@ -1,26 +1,18 @@
 import Link from "next/link";
 import { DayCard } from "@/components/DayCard";
 import { RATING_ORDER, THRESHOLDS, type Rating } from "@/lib/conditions";
-import { getWeekForecast, type DayForecast, type WeekForecast } from "@/lib/forecast";
+import { getWeekForecast, type DayForecast } from "@/lib/forecast";
 import { formatWindow } from "@/lib/format";
 
 export const metadata = { title: "Surf & Foil this week" };
 export const revalidate = 1800;
 
+/**
+ * A forecast failure is deliberately left to throw into `error.tsx`: catching it
+ * here would make the failure page the cached ISR payload for the next 30 min.
+ */
 export default async function HomePage() {
-  let week: WeekForecast;
-  try {
-    week = await getWeekForecast();
-  } catch (error) {
-    return (
-      <main className="mx-auto max-w-5xl px-6 py-16">
-        <h1 className="text-2xl font-semibold text-slate-100">Forecast unavailable</h1>
-        <p className="mt-2 text-slate-400">
-          {error instanceof Error ? error.message : "Could not load the forecast."}
-        </p>
-      </main>
-    );
-  }
+  const week = await getWeekForecast();
 
   const surfPick = bestDay(week.days, (day) => day.surf.best);
   const foilPick = bestDay(week.days, (day) => day.foil.best);

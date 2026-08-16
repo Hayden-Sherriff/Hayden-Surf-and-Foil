@@ -4,7 +4,7 @@
  * server's own timezone shifting them.
  */
 export function formatHour(time: string): string {
-  const hour = Number(time.slice(11, 13));
+  const hour = Number(time.slice(11, 13)) % 24;
   const suffix = hour < 12 ? "am" : "pm";
   const twelve = hour % 12 === 0 ? 12 : hour % 12;
   return `${twelve}${suffix}`;

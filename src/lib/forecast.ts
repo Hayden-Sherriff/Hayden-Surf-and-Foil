@@ -61,36 +61,38 @@ function marineUrl(spots: { lat: number; lon: number }[]): string {
   );
 }
 
+function windUrl(spots: { lat: number; lon: number }[]): string {
+  const { latitude, longitude } = coords(spots);
+  return (
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+    `&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn` +
+    `&timezone=${encodeURIComponent(TIMEZONE)}&forecast_days=${FORECAST_DAYS}`
+  );
+}
+
 /**
  * The marine model rejects coordinates it considers land, and one bad point
  * fails the whole batch, so a failed batch falls back to per-spot requests and
- * keeps whatever resolves.
+ * keeps whatever resolves. Spots whose own request fails come back as null and
+ * are simply left out of the week.
  */
-async function fetchMarine(
-  spots: { lat: number; lon: number }[],
-): Promise<(MarineResponse | null)[]> {
+async function fetchPerSpot<T, S extends { lat: number; lon: number }>(
+  spots: S[],
+  url: (spots: S[]) => string,
+): Promise<(T | null)[]> {
   try {
-    return await fetchJson<MarineResponse>(marineUrl(spots));
+    return await fetchJson<T>(url(spots));
   } catch {
     return Promise.all(
       spots.map(async (spot) => {
         try {
-          return (await fetchJson<MarineResponse>(marineUrl([spot])))[0] ?? null;
+          return (await fetchJson<T>(url([spot])))[0] ?? null;
         } catch {
           return null;
         }
       }),
     );
   }
-}
-
-async function fetchWind(spots: { lat: number; lon: number }[]) {
-  const { latitude, longitude } = coords(spots);
-  const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-    `&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn` +
-    `&timezone=${encodeURIComponent(TIMEZONE)}&forecast_days=${FORECAST_DAYS}`;
-  return fetchJson<WindResponse>(url);
 }
 
 function hourOf(time: string): number {
@@ -132,9 +134,9 @@ export type WeekForecast = {
 export async function getWeekForecast(): Promise<WeekForecast> {
   const now = brisbaneNow();
   const [marine, surfWind, foilWind] = await Promise.all([
-    fetchMarine(SURF_SPOTS),
-    fetchWind(SURF_SPOTS),
-    fetchWind(FOIL_SPOTS),
+    fetchPerSpot<MarineResponse, (typeof SURF_SPOTS)[number]>(SURF_SPOTS, marineUrl),
+    fetchPerSpot<WindResponse, (typeof SURF_SPOTS)[number]>(SURF_SPOTS, windUrl),
+    fetchPerSpot<WindResponse, (typeof FOIL_SPOTS)[number]>(FOIL_SPOTS, windUrl),
   ]);
 
   const surfHours: SurfHour[] = [];
@@ -147,14 +149,15 @@ export async function getWeekForecast(): Promise<WeekForecast> {
       const waveHeightM = sea.wave_height[i];
       const windKts = wind.wind_speed_10m[i];
       const windDir = wind.wind_direction_10m[i];
-      if (waveHeightM == null || windKts == null || windDir == null) return;
+      const swellDir = sea.swell_wave_direction[i];
+      if (waveHeightM == null || windKts == null || windDir == null || swellDir == null) return;
       surfHours.push(
         rateSurfHour(spot, {
           time,
           waveHeightM,
           swellHeightM: sea.swell_wave_height[i] ?? waveHeightM,
           swellPeriodS: sea.swell_wave_period[i] ?? sea.wave_period[i] ?? 0,
-          swellDir: sea.swell_wave_direction[i] ?? 0,
+          swellDir,
           windKts,
           windGustKts: wind.wind_gusts_10m[i] ?? windKts,
           windDir,
