@@ -140,7 +140,7 @@ export function rateSurfHour(
     rating = surfFt >= THRESHOLDS.goodSurfFt && clean ? "fair" : "poor";
   } else if (overpowering) {
     rating = bigEnough && (clean || halfClean) ? "fair" : "poor";
-    reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} ${clean || halfClean ? "is too strong, faces will be chopped up" : "onshore gale, blown out"}`;
+    reason = `${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} ${clean || halfClean ? "is too strong, faces will be chopped up" : `${windQuality} gale, blown out`}`;
   } else if (bigEnough && clean) {
     const lined = angleDelta(input.swellDir, spot.idealSwellDir) <= 35 && input.swellPeriodS >= 8;
     rating = surfFt >= THRESHOLDS.epicSurfFt && lined ? "epic" : "good";
@@ -150,7 +150,7 @@ export function rateSurfHour(
     reason = `${surfFt}ft but ${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is cross-offshore`;
   } else if (bigEnough) {
     rating = "poor";
-    reason = `${surfFt}ft but ${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} onshore`;
+    reason = `${surfFt}ft but ${Math.round(input.windKts)}kt ${compassPoint(input.windDir)} is ${windQuality}`;
   } else if (clean && surfFt >= THRESHOLDS.goodSurfFt - 0.6) {
     rating = "fair";
     reason = `Clean but only ${surfFt}ft`;

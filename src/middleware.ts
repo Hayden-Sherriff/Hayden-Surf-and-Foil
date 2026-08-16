@@ -15,8 +15,10 @@ export async function middleware(request: NextRequest) {
 
 /**
  * Everything is gated except the login screen, the two auth routes and static
- * assets, so a page added later is protected without touching this list.
+ * assets, so a page added later is protected without touching this list. The
+ * exclusions are anchored to whole path segments, so `/login-admin` would still
+ * be gated.
  */
 export const config = {
-  matcher: ["/((?!login|api/login|api/logout|_next/|favicon.ico).*)"],
+  matcher: ["/((?!login$|api/login$|api/logout$|_next/|favicon.ico$).*)"],
 };

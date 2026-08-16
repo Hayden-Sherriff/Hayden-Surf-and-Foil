@@ -168,13 +168,22 @@ export async function getWeekForecast(): Promise<WeekForecast> {
       const windKts = wind.wind_speed_10m[w];
       const windDir = wind.wind_direction_10m[w];
       const swellDir = sea.swell_wave_direction[i];
-      if (waveHeightM == null || windKts == null || windDir == null || swellDir == null) return;
+      const periodS = sea.swell_wave_period[i] ?? sea.wave_period[i];
+      if (
+        waveHeightM == null ||
+        windKts == null ||
+        windDir == null ||
+        swellDir == null ||
+        periodS == null
+      ) {
+        return;
+      }
       surfHours.push(
         rateSurfHour(spot, {
           time,
           waveHeightM,
           swellHeightM: sea.swell_wave_height[i] ?? waveHeightM,
-          swellPeriodS: sea.swell_wave_period[i] ?? sea.wave_period[i] ?? 0,
+          swellPeriodS: periodS,
           swellDir,
           windKts,
           windGustKts: wind.wind_gusts_10m[w] ?? windKts,
