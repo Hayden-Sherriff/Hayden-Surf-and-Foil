@@ -52,14 +52,35 @@ export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
  * Shared by login and logout: the delete has to repeat the same `path`, or the
  * browser expires a different cookie scoped to `/api` and the session survives.
  */
-export const SESSION_COOKIE_OPTIONS = {
+const SESSION_COOKIE_OPTIONS = {
   name: SESSION_COOKIE,
   httpOnly: true,
   sameSite: "lax",
-  /** Only a local `next dev` run is served over plain HTTP. */
-  secure: process.env.NODE_ENV !== "development",
   path: "/",
 } as const;
+
+/**
+ * Secure everywhere except a plain-HTTP request to a loopback host, where the
+ * browser would drop the cookie and the login would loop; that covers a local
+ * `next start` without weakening preview or production, which always arrive as
+ * HTTPS (`x-forwarded-proto` on a proxied deployment).
+ */
+export function sessionCookieOptions(request: Request) {
+  return { ...SESSION_COOKIE_OPTIONS, secure: !isLoopbackHttp(request) };
+}
+
+function isLoopbackHttp(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0].trim();
+  if (forwardedProto && forwardedProto !== "http") return false;
+  let url: URL;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:") return false;
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
+}
 
 /**
  * The session cookie is sameSite "lax", which still allows top-level form posts

@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createSessionToken, isSameOrigin, isValidPassword, isValidSessionToken } from "./auth";
+import {
+  createSessionToken,
+  isSameOrigin,
+  isValidPassword,
+  isValidSessionToken,
+  sessionCookieOptions,
+} from "./auth";
 
 const originalEnv = { ...process.env };
 
@@ -67,5 +73,38 @@ describe("origin check", () => {
 
   it("rejects requests without an origin header", () => {
     expect(isSameOrigin(withHeaders({ host: "surf.example.com" }))).toBe(false);
+  });
+});
+
+describe("session cookie options", () => {
+  const post = (url: string, headers: Record<string, string> = {}) =>
+    new Request(url, { method: "POST", headers });
+
+  it("marks the cookie secure over https", () => {
+    expect(sessionCookieOptions(post("https://surf.example.com/api/login")).secure).toBe(true);
+  });
+
+  it("marks the cookie secure behind an https proxy", () => {
+    expect(
+      sessionCookieOptions(
+        post("http://surf.example.com/api/login", { "x-forwarded-proto": "https" }),
+      ).secure,
+    ).toBe(true);
+  });
+
+  it("keeps a remote plain-http host secure so the cookie is never sent in clear", () => {
+    expect(sessionCookieOptions(post("http://surf.example.com/api/login")).secure).toBe(true);
+  });
+
+  it("drops secure for a local plain-http run so the browser keeps the cookie", () => {
+    expect(sessionCookieOptions(post("http://localhost:3000/api/login")).secure).toBe(false);
+    expect(sessionCookieOptions(post("http://127.0.0.1:3000/api/login")).secure).toBe(false);
+  });
+
+  it("keeps localhost secure when the proxy terminated https", () => {
+    expect(
+      sessionCookieOptions(post("http://localhost:3000/api/login", { "x-forwarded-proto": "https" }))
+        .secure,
+    ).toBe(true);
   });
 });

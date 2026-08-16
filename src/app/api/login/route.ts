@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import {
-  SESSION_COOKIE_OPTIONS,
   SESSION_MAX_AGE_SECONDS,
   createSessionToken,
   isSameOrigin,
   isValidPassword,
+  sessionCookieOptions,
 } from "@/lib/auth";
 import { clearAttempts, clientKey, isThrottled, recordFailure } from "@/lib/throttle";
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   const response = NextResponse.redirect(new URL("/", request.url), { status: 303 });
   response.cookies.set({
-    ...SESSION_COOKIE_OPTIONS,
+    ...sessionCookieOptions(request),
     value: await createSessionToken(),
     maxAge: SESSION_MAX_AGE_SECONDS,
   });
